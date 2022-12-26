@@ -1,5 +1,5 @@
 import { fireEvent, GlobalTestState, render } from "../test-utils";
-import { Excalidraw } from "../../packages/excalidraw/index";
+import { Excalidraw, Footer } from "../../packages/excalidraw/index";
 import { queryByText, queryByTestId } from "@testing-library/react";
 import { GRID_SIZE, THEME } from "../../constants";
 import { t } from "../../i18n";
@@ -49,6 +49,31 @@ describe("<Excalidraw/>", () => {
     });
   });
 
+  it("should render the footer only when Footer is passed as children", async () => {
+    //Footer not passed hence it will not render the footer
+    let { container } = await render(
+      <Excalidraw>
+        <div>This is a custom footer</div>
+      </Excalidraw>,
+    );
+    expect(
+      container.querySelector(".layer-ui__wrapper__footer-center"),
+    ).toBeEmptyDOMElement();
+
+    // Footer passed hence it will render the footer
+    ({ container } = await render(
+      <Excalidraw>
+        <Footer>
+          <div>This is a custom footer</div>
+        </Footer>
+      </Excalidraw>,
+    ));
+    expect(
+      container.querySelector(".layer-ui__wrapper__footer-center")?.innerHTML,
+    ).toMatchInlineSnapshot(
+      `"<div class=\\"layer-ui__wrapper__footer-center zen-mode-transition\\"><div>This is a custom footer</div></div>"`,
+    );
+  });
   describe("Test gridModeEnabled prop", () => {
     it('should show grid mode in context menu when gridModeEnabled is "undefined"', async () => {
       const { container } = await render(<Excalidraw />);
@@ -88,20 +113,44 @@ describe("<Excalidraw/>", () => {
   });
 
   describe("Test theme prop", () => {
-    it('should show the dark mode toggle when the theme prop is "undefined"', async () => {
+    it("should show the theme toggle by default", async () => {
       const { container } = await render(<Excalidraw />);
+
       expect(h.state.theme).toBe(THEME.LIGHT);
 
+      queryByTestId(container, "menu-button")!.click();
       const darkModeToggle = queryByTestId(container, "toggle-dark-mode");
-
       expect(darkModeToggle).toBeTruthy();
     });
 
-    it('should not show the dark mode toggle when the theme prop is not "undefined"', async () => {
+    it("should not show theme toggle when the theme prop is defined", async () => {
       const { container } = await render(<Excalidraw theme="dark" />);
       expect(h.state.theme).toBe(THEME.DARK);
-
       expect(queryByTestId(container, "toggle-dark-mode")).toBe(null);
+    });
+
+    it("should show theme mode toggle when `UIOptions.canvasActions.toggleTheme` is true", async () => {
+      const { container } = await render(
+        <Excalidraw
+          theme={THEME.DARK}
+          UIOptions={{ canvasActions: { toggleTheme: true } }}
+        />,
+      );
+      expect(h.state.theme).toBe(THEME.DARK);
+      const darkModeToggle = queryByTestId(container, "toggle-dark-mode");
+      expect(darkModeToggle).toBeTruthy();
+    });
+
+    it("should not show theme toggle when `UIOptions.canvasActions.toggleTheme` is false", async () => {
+      const { container } = await render(
+        <Excalidraw
+          UIOptions={{ canvasActions: { toggleTheme: false } }}
+          theme={THEME.DARK}
+        />,
+      );
+      expect(h.state.theme).toBe(THEME.DARK);
+      const darkModeToggle = queryByTestId(container, "toggle-dark-mode");
+      expect(darkModeToggle).toBeFalsy();
     });
   });
 
@@ -214,7 +263,7 @@ describe("<Excalidraw/>", () => {
 
       it("should hide the theme toggle when theme is false", async () => {
         const { container } = await render(
-          <Excalidraw UIOptions={{ canvasActions: { theme: false } }} />,
+          <Excalidraw UIOptions={{ canvasActions: { toggleTheme: false } }} />,
         );
 
         expect(queryByTestId(container, "toggle-dark-mode")).toBeNull();

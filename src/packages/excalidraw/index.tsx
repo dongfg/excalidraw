@@ -10,6 +10,7 @@ import { defaultLang } from "../../i18n";
 import { DEFAULT_UI_OPTIONS } from "../../constants";
 import { Provider } from "jotai";
 import { jotaiScope, jotaiStore } from "../../jotai";
+import Footer from "../../components/footer/FooterCenter";
 
 const ExcalidrawBase = (props: ExcalidrawProps) => {
   const {
@@ -20,7 +21,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
     isCollaborating = false,
     onPointerUpdate,
     renderTopRightUI,
-    renderFooter,
+    renderSidebar,
     langCode = defaultLang.code,
     viewModeEnabled,
     zenModeEnabled,
@@ -38,6 +39,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
     onLinkOpen,
     onPointerDown,
     onScrollChange,
+    children,
   } = props;
 
   const canvasActions = props.UIOptions?.canvasActions;
@@ -54,6 +56,13 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
     UIOptions.canvasActions.export.saveFileToDisk =
       canvasActions.export?.saveFileToDisk ??
       DEFAULT_UI_OPTIONS.canvasActions.export.saveFileToDisk;
+  }
+
+  if (
+    UIOptions.canvasActions.toggleTheme === null &&
+    typeof theme === "undefined"
+  ) {
+    UIOptions.canvasActions.toggleTheme = true;
   }
 
   useEffect(() => {
@@ -75,7 +84,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
   }, []);
 
   return (
-    <InitializeApp langCode={langCode}>
+    <InitializeApp langCode={langCode} theme={theme}>
       <Provider unstable_createStore={() => jotaiStore} scope={jotaiScope}>
         <App
           onChange={onChange}
@@ -85,7 +94,6 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
           isCollaborating={isCollaborating}
           onPointerUpdate={onPointerUpdate}
           renderTopRightUI={renderTopRightUI}
-          renderFooter={renderFooter}
           langCode={langCode}
           viewModeEnabled={viewModeEnabled}
           zenModeEnabled={zenModeEnabled}
@@ -104,7 +112,10 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
           onLinkOpen={onLinkOpen}
           onPointerDown={onPointerDown}
           onScrollChange={onScrollChange}
-        />
+          renderSidebar={renderSidebar}
+        >
+          {children}
+        </App>
       </Provider>
     </InitializeApp>
   );
@@ -225,3 +236,6 @@ export {
   sceneCoordsToViewportCoords,
   viewportCoordsToSceneCoords,
 } from "../../utils";
+
+export { Sidebar } from "../../components/Sidebar/Sidebar";
+export { Footer };
